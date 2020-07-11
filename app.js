@@ -30,17 +30,27 @@ var Player = function(id,color) {
         pressingLeft:false,
         pressingUp:false,
         pressingDown:false,
+        pressingShift:false,
         maxSpeed:10,
     };
-    self.updatePosition = function(){
-        if(self.pressingRight)
+    self.update = function(){
+        if(self.pressingRight) {
             self.x += self.maxSpeed;
-        if(self.pressingLeft)
+        }
+        if(self.pressingLeft) {
             self.x -= self.maxSpeed;
-        if(self.pressingUp)
+        }
+        if(self.pressingUp) {
             self.y-= self.maxSpeed;
-        if(self.pressingDown)
+        }
+        if(self.pressingDown) {
             self.y += self.maxSpeed;
+        }
+        if(self.pressingShift) {
+            self.maxSpeed = 20;
+        }else {
+            self.maxSpeed = 10;
+        }
     };
     return self;
 };
@@ -64,14 +74,17 @@ io.sockets.on('connection',function(socket) {
         //print('socket disconnection')
     });
     socket.on('keyPress',function(data) {
+        data.key = data.key.toLowerCase();
         if(data.key == "w") {
             player.pressingUp = data.state;
-        }else if(data.key == "s") {
+        } if(data.key == "s") {
             player.pressingDown = data.state;
-        }else if(data.key == "a") {
+        } if(data.key == "a") {
             player.pressingLeft = data.state;
-        }else if(data.key == "d") {
+        } if(data.key == "d") {
             player.pressingRight = data.state;
+        } if(data.key == "shift") {
+            player.pressingShift = data.state;
         }
     })
     
@@ -83,7 +96,7 @@ setInterval(function() {
 
     for(var i in PLAYER_LIST) {
         var player = PLAYER_LIST[i];
-        player.updatePosition();
+        player.update();
         //socket.emit('newPosition', {
          //   x:socket.x,
         //    y:socket.y
