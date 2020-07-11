@@ -81,7 +81,7 @@ setInterval(function() {
     print(Object.keys(SOCKET_LIST).length);
     var pack = [];
 
-    for(let i in PLAYER_LIST) {
+    for(var i in PLAYER_LIST) {
         var player = PLAYER_LIST[i];
         player.updatePosition();
         //socket.emit('newPosition', {
@@ -94,7 +94,7 @@ setInterval(function() {
             color:player.color
         });
     }
-    for(let i in SOCKET_LIST) {
+    for(var i in SOCKET_LIST) {
         var socket = SOCKET_LIST[i];
         socket.emit('newData',pack);
         
