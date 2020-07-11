@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>first mutiplayer test</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js">
+
+    </script>
+    <script src="../../../../oof.js">
+
+    </script>
+</head>
+<body>
+    <canvas id="ctx">
+
+    </canvas>
+    <!--center>
+        <h1>
+            lmao
+        </h1>
+    </center-->
+    <script>
+        function get(doc) {
+            return document.getElementById(doc);
+        }
+        var socket = io();
+        var canvas = get('ctx');
+        var ctx = get("ctx").getContext('2d');
+        canvas.width = innerWidth - 5;
+        canvas.height = innerHeight - 5;
+        window.onbeforeunload = confirmExit;
+        function rgbToHex(r, g, b) {
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }   
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+        socket.on('newData',function(data) {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            for(var i = 0;i<data.length;i++) {
+                
+                    ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
+                    ctx.fillRect(data[i].x-10,data[i].y-10,20,20);
+                
+                
+            }
+            //ctx.fillRect(data.x-10,data.y-10,20,20);
+            //ctx.fillText('N',data.x,data.y);
+        });
+        function confirmExit() {
+            socket.emit('closed');
+                //return "You have attempted to leave this page. Are you sure?";
+        }
+        document.onkeydown = function(event) {
+            socket.emit('keyPress',{
+                key:event.key,
+                state:true
+            })
+        };
+        document.onkeyup = function(event) {
+            socket.emit('keyPress',{
+                key:event.key,
+                state:false
+            })
+        }
+    </script>
+    
+</body>
+</html>
