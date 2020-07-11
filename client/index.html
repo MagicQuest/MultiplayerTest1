@@ -7,12 +7,21 @@
     <script src="https://cdn.socket.io/socket.io-1.4.5.js">
 
     </script>
-    <script src="../../../../oof.js">
+    <link rel="stylesheet" href="https://magicquest.github.io/clickable.css">
+    <script src="https://magicquest.github.io/oof.js">
 
     </script>
 </head>
 <body>
-    <canvas id="ctx">
+    <center id="center">
+        <input id="name" placeholder="type your name here!">
+
+        </input>
+        <button onclick = "answer()">
+            Play!
+        </button>
+    </center>
+    <canvas style="display: none;" id="ctx">
 
     </canvas>
     <!--center>
@@ -24,6 +33,12 @@
         function get(doc) {
             return document.getElementById(doc);
         }
+        
+        function answer() {
+            socket.emit('name',{name:get("name").value});
+            canvas.style.display = "inline";
+            get("center").style.display = "none";
+        }
         var socket = io();
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
@@ -33,15 +48,21 @@
         function rgbToHex(r, g, b) {
             return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
         }   
+        addEventListener("resize",function(event) {
+    canvas.width = innerWidth - 5
+    canvas.height = innerHeight - 5
+  })
         function componentToHex(c) {
             var hex = c.toString(16);
             return hex.length == 1 ? "0" + hex : hex;
         }
         socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.font="30px Comic Sans MS";
             for(var i = 0;i<data.length;i++) {
-                
+
                     ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
+                    ctx.fillText(data[i].name,data[i].x-20,data[i].y-20)
                     ctx.fillRect(data[i].x-10,data[i].y-10,20,20);
                 
                 

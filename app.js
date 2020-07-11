@@ -31,6 +31,7 @@ var Player = function(id,color) {
         pressingUp:false,
         pressingDown:false,
         pressingShift:false,
+        name:"Player",
         maxSpeed:10,
     };
     self.update = function(){
@@ -86,7 +87,11 @@ io.sockets.on('connection',function(socket) {
         } if(data.key == "shift") {
             player.pressingShift = data.state;
         }
-    })
+    });
+    socket.on('name',function(data) {
+        print(data.name);
+        player.name=data.name;
+    });
     
     bruh++;
 });
@@ -104,7 +109,8 @@ setInterval(function() {
         pack.push({
             x:player.x,
             y:player.y,
-            color:player.color
+            color:player.color,
+            name:player.name,
         });
     }
     for(var i in SOCKET_LIST) {
