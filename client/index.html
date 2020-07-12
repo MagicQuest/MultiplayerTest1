@@ -13,11 +13,11 @@
     </script>
 </head>
 <body>
-    <center id="center">
-        <input id="name" placeholder="type your name here!">
+    <center id="center" style="font-size: 30px;">
+        <input style="font-size: 30px;" id="name" placeholder="type your name here!">
 
         </input>
-        <button onclick = "answer()">
+        <button style="font-size: 30px;" onclick = "answer()">
             Play!
         </button>
     </center>
@@ -45,17 +45,25 @@
         
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
+        socket.emit('setSize', {
+                width:canvas.width,
+                height:canvas.height,
+            })
         window.onbeforeunload = confirmExit;
         function rgbToHex(r, g, b) {
             return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
         }   
         addEventListener("resize",function(event) {
-    canvas.width = innerWidth - 5
-    canvas.height = innerHeight - 5
-  })    
+            canvas.width = innerWidth - 5
+            canvas.height = innerHeight - 5
+            socket.emit('setSize', {
+                width:canvas.width,
+                height:canvas.height,
+            })
+        })
         addEventListener("mousedown",function(event) {
             socket.emit('addFood',{x:event.x,y:event.y});
-        });
+        }); 
         function componentToHex(c) {
             var hex = c.toString(16);
             return hex.length == 1 ? "0" + hex : hex;
@@ -63,17 +71,23 @@
         socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.font="30px Comic Sans MS";
-            print(data);
-            print(data[0].food);
-            for(var i = 0;i < data[0].food.length;i++) {
-                var food = data[0].food[i];
-                circle(ctx,food.x,food.y,10,360,food.color);
-            }
+            //print(data);
+            //print(data[0].food);
+            //if(data[0] != undefined) {
+                for(var i = 0;i < data[0].food.length;i++) {
+                    var food = data[0].food[i];
+                    if(food != undefined) {
+                        circle(ctx,food.x,food.y,10,360,food.color);
+                    }
+                    
+                }
+           // }
             for(var i = 0;i<data.length;i++) {
 
                     ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
-                    ctx.fillText(data[i].name,data[i].x-20,data[i].y-20)
-                    ctx.fillRect(data[i].x-10,data[i].y-10,20,20);
+                    print(data[i].size);
+                    ctx.fillText(data[i].name,data[i].x-10,data[i].y-data[i].size)
+                    ctx.fillRect(data[i].x-(data[i].size/2),data[i].y-(data[i].size/2),data[i].size,data[i].size);
                 
                 
             }
