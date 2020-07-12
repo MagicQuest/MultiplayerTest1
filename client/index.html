@@ -42,6 +42,7 @@
         var socket = io();
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
+        
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
         window.onbeforeunload = confirmExit;
@@ -51,7 +52,10 @@
         addEventListener("resize",function(event) {
     canvas.width = innerWidth - 5
     canvas.height = innerHeight - 5
-  })
+  })    
+        addEventListener("mousedown",function(event) {
+            socket.emit('addFood',{x:event.x,y:event.y});
+        });
         function componentToHex(c) {
             var hex = c.toString(16);
             return hex.length == 1 ? "0" + hex : hex;
@@ -59,6 +63,12 @@
         socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.font="30px Comic Sans MS";
+            print(data);
+            print(data[0].food);
+            for(var i = 0;i < data[0].food.length;i++) {
+                var food = data[0].food[i];
+                circle(ctx,food.x,food.y,10,360,food.color);
+            }
             for(var i = 0;i<data.length;i++) {
 
                     ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);

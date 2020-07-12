@@ -19,7 +19,22 @@ print("doin' ur mom doin' doin' ur mom");
 var io = require('socket.io')(serv,{});
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
-
+var foond = [];
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+} 
+var Food = function(x,y) {
+    var self = {
+        x:x,
+        y:y,
+        color:rgbToHex(random(0,255),random(0,255),random(0,255)),
+    }
+    return self;
+}
 var Player = function(id,color) {
     var self = {
         x:250,
@@ -74,6 +89,9 @@ io.sockets.on('connection',function(socket) {
         delete PLAYER_LIST[socket.id];
         //print('socket disconnection')
     });
+    socket.on('addFood',function(data) {
+        foond.push(Food(data.x,data.y));
+    });
     socket.on('keyPress',function(data) {
         data.key = data.key.toLowerCase();
         if(data.key == "w") {
@@ -106,11 +124,13 @@ setInterval(function() {
          //   x:socket.x,
         //    y:socket.y
         //});
+        print(foond);
         pack.push({
             x:player.x,
             y:player.y,
             color:player.color,
             name:player.name,
+            food:foond,
         });
     }
     for(var i in SOCKET_LIST) {
