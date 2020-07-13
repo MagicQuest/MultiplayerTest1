@@ -71,8 +71,8 @@ var Player = function(id,color,socket) {
         }else {
             self.maxSpeed = 10;
         }
-        if(self.score >= 500) {
-            self.score = 500;
+        if(self.score >= 750) {
+            self.score = 750;
         }
     };
     self.die = function() {
