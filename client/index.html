@@ -42,7 +42,27 @@
         var socket = io();
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
-        
+        var you = {
+            x:250,
+            y:250,
+        };
+        //var distance = {
+        //    x:0,
+        //    y:0,
+        //}
+        socket.on('you', function(data) {
+            you.x = data.x;
+            you.y = data.y;
+            /*if(data.w) {
+                distance.y-=data.maxSpeed;
+            }if(data.s) {
+                distance.y+=data.maxSpeed;
+            }if(data.a) {
+                distance.x-=data.maxSpeed;
+            }if(data.d) {
+                distance.x+=data.maxSpeed;
+            }*/
+        })
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
         socket.emit('setSize', {
@@ -77,7 +97,7 @@
                 for(var i = 0;i < data[0].food.length;i++) {
                     var food = data[0].food[i];
                     if(food != undefined) {
-                        circle(ctx,food.x,food.y,10,360,food.color);
+                        circle(ctx,food.x/*-distance.x/2*/,food.y/*-distance.y/2*/,10,360,food.color);
                     }
                     
                 }
@@ -86,8 +106,14 @@
 
                     ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
                     print(data[i].size);
-                    ctx.fillText(data[i].name,data[i].x-10,data[i].y-data[i].size)
-                    ctx.fillRect(data[i].x-(data[i].size/2),data[i].y-(data[i].size/2),data[i].size,data[i].size);
+                    if(data[i].x == you.x && data[i].y == you.y) {
+                        ctx.fillText(data[i].name,data[i].x-10,data[i].y-data[i].size)
+                        ctx.fillRect(data[i].x-(data[i].size/2),data[i].y-(data[i].size/2),data[i].size,data[i].size);
+                    }else {
+                        ctx.fillText(data[i].name,(data[i].x-10)/*-distance.x/2*/,(data[i].y-data[i].size)/*-distance.y/2*/)
+                        ctx.fillRect((data[i].x-(data[i].size/2))/*-distance.x/2*/,(data[i].y-(data[i].size/2))/*-distance.y/2*/,data[i].size,data[i].size);
+                    }
+                    
                 
                 
             }
@@ -103,6 +129,10 @@
                 key:event.key,
                 state:true
             })
+            var data = {
+                key:event.key,
+            }
+            
         };
         document.onkeyup = function(event) {
             socket.emit('keyPress',{

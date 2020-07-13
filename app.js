@@ -1,5 +1,4 @@
 const express = require('express');
-const { randomBytes } = require('crypto');
 const app = express();
 const serv = require('http').Server(app);
 const print = function(string) {
@@ -36,7 +35,7 @@ var Food = function(x,y) {
     }
     return self;
 }
-var Player = function(id,color) {
+var Player = function(id,color,socket) {
     var self = {
         x:250,
         y:250,
@@ -52,6 +51,7 @@ var Player = function(id,color) {
         maxSpeed:10,
         width:500,
         height:500,
+        socket:socket,
     };
     self.update = function(){
         if(self.pressingRight) {
@@ -70,6 +70,9 @@ var Player = function(id,color) {
             self.maxSpeed = 20;
         }else {
             self.maxSpeed = 10;
+        }
+        if(self.score >= 500) {
+            self.score = 500;
         }
     };
     self.die = function() {
@@ -108,7 +111,7 @@ io.sockets.on('connection',function(socket) {
         z:random(0,255)
     }
     SOCKET_LIST[socket.id] = socket;
-    var player = Player(socket.id,socket.color);
+    var player = Player(socket.id,socket.color,socket);
     PLAYER_LIST[socket.id] = player;
     //print('socket connection');
     socket.on('disconnect',function() {
@@ -119,6 +122,8 @@ io.sockets.on('connection',function(socket) {
     socket.on('setSize',function(data) {
         player.width = data.width;
         player.height = data.height;
+        //player.x = data.width/2;
+        //player.y = data.height/2;
     });
     socket.on('addFood',function(data) {
         foond.push(Food(data.x,data.y));
@@ -177,6 +182,15 @@ setInterval(function() {
          //   x:socket.x,
         //    y:socket.y
         //});
+        player.socket.emit('you',{
+            x:player.x,
+            y:player.y,
+            w:player.pressingUp,
+            s:player.pressingDown,
+            a:player.pressingLeft,
+            d:player.pressingRight,
+            maxSpeed:player.maxSpeed,
+        })
         print(player.score);
         pack.push({
             x:player.x,
