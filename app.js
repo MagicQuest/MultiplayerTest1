@@ -130,18 +130,21 @@ io.sockets.on('connection',function(socket) {
     });
     
     socket.on('keyPress',function(data) {
-        data.key = data.key.toLowerCase();
-        if(data.key == "w") {
-            player.pressingUp = data.state;
-        } if(data.key == "s") {
-            player.pressingDown = data.state;
-        } if(data.key == "a") {
-            player.pressingLeft = data.state;
-        } if(data.key == "d") {
-            player.pressingRight = data.state;
-        } if(data.key == "shift") {
-            player.pressingShift = data.state;
+        if(data.key != undefined) {
+            data.key = data.key.toLowerCase();
+            if(data.key == "w") {
+                player.pressingUp = data.state;
+            } if(data.key == "s") {
+                player.pressingDown = data.state;
+            } if(data.key == "a") {
+                player.pressingLeft = data.state;
+            } if(data.key == "d") {
+                player.pressingRight = data.state;
+            } if(data.key == "shift") {
+                player.pressingShift = data.state;
+            }
         }
+        
     });
     socket.on('name',function(data) {
         print(data.name);
