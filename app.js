@@ -154,6 +154,9 @@ io.sockets.on('connection',function(socket) {
     bruh++;
 });
 setInterval(function() {
+    foond.push(Food(random(0,1920*2),random(0,1080*2)));
+},2000);
+setInterval(function() {
     players = Object.keys(PLAYER_LIST).length
     //print(Object.keys(SOCKET_LIST).length);
     var pack = [];
