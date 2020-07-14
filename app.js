@@ -71,8 +71,8 @@ var Player = function(id,color,socket) {
         }else {
             self.maxSpeed = 10;
         }
-        if(self.score >= 750) {
-            self.score = 750;
+        if(self.score >= 2000) {
+            self.score = 2000;
         }
     };
     self.die = function() {
@@ -154,7 +154,7 @@ io.sockets.on('connection',function(socket) {
     bruh++;
 });
 setInterval(function() {
-    foond.push(Food(random(0,1920*2),random(0,1080*2)));
+    foond.push(Food(random(0,1920*3),random(0,1080*3)));
 },2000);
 setInterval(function() {
     players = Object.keys(PLAYER_LIST).length
