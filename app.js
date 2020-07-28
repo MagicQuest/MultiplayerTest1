@@ -71,9 +71,6 @@ var Player = function(id,color,socket) {
         }else {
             self.maxSpeed = 10;
         }
-        if(self.score >= 2000) {
-            self.score = 2000;
-        }
     };
     self.die = function() {
         self.x = random(0,self.width);
