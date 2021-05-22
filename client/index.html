@@ -88,17 +88,27 @@
 
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
-        socket.emit('setSize', {
-            width:canvas.width,
-            height:canvas.height,
-        });
+        //socket.emit('setSize', {
+        //    width:canvas.width,
+        //    height:canvas.height,
+        //});
+        function circle(ctx,x,y,r,endAngle = 360,fillColor = "0") {
+            ctx.beginPath();
+            
+            ctx.arc(x, y, r, 0, (endAngle/180) * Math.PI);
+            if(fillColor != "0") {
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+            }
+            ctx.stroke();
+        }
         addEventListener("resize",function(event) {
             canvas.width = innerWidth - 5
             canvas.height = innerHeight - 5
-            socket.emit('setSize', {
-                width:canvas.width,
-                height:canvas.height,
-            });
+            //socket.emit('setSize', {
+            //    width:canvas.width,
+            //    height:canvas.height,
+            //});
         });
 
         //document.documentElement.addEventListener("wheel",function(event) {
@@ -153,6 +163,7 @@
             }
             ctx.fillRect(20,20,235,235);
             ctx.clearRect(25,25,225,225);
+            ctx.fillText("Position: " + Math.ceil(you.x/10) + "," + Math.ceil(you.y/10),140,300);
             for(let i = 0;i<data.length;i++) {
                 ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
                 //bro a minimap is the hardest thing to make if you don't understand what is even happening

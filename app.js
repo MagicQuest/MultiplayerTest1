@@ -56,8 +56,8 @@ function foodObj(x,y) {
 //jesus this is terrible
 function playerObj(socket) {
     var player = {
-        x:250,
-        y:250,
+        x:random(-1920,1920),
+        y:random(-1920,1920),
         score:20,
         color:{x:random(0,255),y:random(0,255),z:random(0,255)},
         pressingRight:false,
@@ -67,8 +67,6 @@ function playerObj(socket) {
         pressingShift:false,
         name:"Player",
         speed:10,
-        width:500,
-        height:500,
         socket:socket,
     }
     player.update = function(){
@@ -91,8 +89,8 @@ function playerObj(socket) {
         }
     }
     player.die = function() {
-        player.x = random(0,player.width);
-        player.y = random(0,player.height);
+        player.x = random(-1920,1920);
+        player.y = random(-1920,1920);
         player.score = 20;
     }
     return player;
@@ -110,21 +108,19 @@ io.sockets.on('connection',function(socket) {
     socket.id = bruh;
 
     var player = playerObj(socket);
-    playerList[socket.id] = player;
 
-    players++;
     //print('socket connection');
     socket.on('disconnect',function() {
         delete playerList[socket.id];
         players--;
         //print('socket disconnection')
     });
-    socket.on('setSize',function(data) {
+    /*socket.on('setSize',function(data) {
         player.width = data.width;
         player.height = data.height;
         //player.x = data.width/2;
         //player.y = data.height/2;
-    });
+    });*/
     socket.on('addFood',function(data) {
         foond.push(foodObj(data.x,data.y));
     });
@@ -148,7 +144,10 @@ io.sockets.on('connection',function(socket) {
     });
     socket.on('name',function(data) {
         //print(data.name);
+        playerList[socket.id] = player;
         player.name=data.name;
+
+        players++;
     });
     
     bruh++;
@@ -158,10 +157,9 @@ setInterval(function() {
     if(foond.length > 500) {
         foond.splice(1,1);
     }
-    for(var i in playerList) {
-        var player = playerList[i];
+    playerList.forEach(player => {
         foond.push(foodObj(random(player.x-1920,player.x+1920),random(player.y-1920,player.y+1920)));
-    }
+    });
 },2000);
 setInterval(function() {
     //players = Object.keys(playerList).length;
@@ -191,7 +189,7 @@ setInterval(function() {
         player.socket.emit('you',{
             x:player.x,
             y:player.y,
-            //bro im gonna start crying i was sending unneeded information
+            //bro im gonna start crying i was sending unused and unneeded information
         });
         data.push({
             x:player.x,
