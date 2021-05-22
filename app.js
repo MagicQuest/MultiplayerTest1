@@ -157,9 +157,6 @@ setInterval(function() {
     //foond.push(food(random(0,1920*3),random(0,1080*3)));
     if(foond.length > 500) {
         foond.splice(1,1);
-        print("fickinmg");
-    }else {
-        print(foond.length);
     }
     for(var i in playerList) {
         var player = playerList[i];
