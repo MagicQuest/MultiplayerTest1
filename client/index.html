@@ -70,14 +70,26 @@
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
         var you = {
-            x:250,
-            y:250,
+            x:random(-1920,1920),
+            y:random(-1920,1920),
+        };
+        var movementVector = {
+            x: 0,
+            y: 0,
+        };
+        var keys = {
+            w: false,
+            s: false, 
+            a: false,
+            d: false,
+            shift: false,
         };
         //var zoom = 1;
         //var distance = {
         //    x:0,
         //    y:0,
         //}
+
         socket.on('you', function(data) {
             you = data;
             //dude im extremely dense WHEN DID I WRITE 
@@ -134,8 +146,32 @@
             //socket.emit('addFood',{x:event.x,y:event.y});
         }); 
         // b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b u r h   b r u h   b r u h   b r u h   i   g o t t a   g o   p e e   a n d   i   m   a l s o   g o i n g   t o   s   l   e   e   p 
-        
+        setInterval(function() {
+            ctx.font="30px Comic Sans MS";
+            movementVector = {x:0,y:0};
+            let addshit = (keys.shift) ? 20 : 10;
+            if(keys.w) {
+                movementVector.y = -addshit;
+            }
+            if(keys.s) {
+                movementVector.y = addshit;
+            }
+            if(keys.a) {
+                movementVector.x = -addshit;
+            }
+            if(keys.d) {
+                movementVector.x = addshit;
+            }
+            you.x += movementVector.x;
+            you.y += movementVector.y;
+            //alright alright bro you can't add them for some reason and i had repeated problems with that
+            //ctx.fillText("Position: w: " + keys.w + ", s: " + keys.s + "\na: " + keys.a + ", d: " + keys.d,500,500);
+            socket.emit("position",you);
+        },1000/30);
+
         socket.on('newData',function(data) {
+            //ok make it so that you tell the server where you going
+            //and the server tell everybody else so it is more natural when you lag
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.font="30px Comic Sans MS";
             ctx.textAlign = "center";
@@ -210,6 +246,22 @@
             //ctx.fillText('N',data.x,data.y);
         });
         document.onkeydown = function(event) {
+            let key = event.key.toLowerCase();
+            keys.w = (key == "w") ? true : keys.w;
+            keys.s = (key == "s") ? true : keys.s;
+            keys.a = (key == "a") ? true : keys.a;
+            keys.d = (key == "d") ? true : keys.d;
+            keys.shift = (key == "shift") ? true : keys.shift;
+        }
+        document.onkeyup = function(event) {
+            let key = event.key.toLowerCase();
+            keys.w = (key == "w") ? false : keys.w;
+            keys.s = (key == "s") ? false : keys.s;
+            keys.a = (key == "a") ? false : keys.a;
+            keys.d = (key == "d") ? false : keys.d;
+            keys.shift = (key == "shift") ? false : keys.shift;
+        }
+        /*document.onkeydown = function(event) {
             socket.emit('keyPress',{
                 key:event.key,
                 state:true
@@ -223,7 +275,7 @@
                 key:event.key,
                 state:false
             })
-        }
+        }*/
     </script>
     
 </body>

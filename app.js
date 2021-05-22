@@ -56,20 +56,25 @@ function foodObj(x,y) {
 //jesus this is terrible
 function playerObj(socket) {
     var player = {
-        x:random(-1920,1920),
-        y:random(-1920,1920),
+        x:0,//random(-1920,1920),
+        y:0,//random(-1920,1920),
         score:20,
         color:{x:random(0,255),y:random(0,255),z:random(0,255)},
-        pressingRight:false,
+        /*pressingRight:false,
         pressingLeft:false,
         pressingUp:false,
         pressingDown:false,
-        pressingShift:false,
+        pressingShift:false,*/
         name:"Player",
         speed:10,
+        die: (() => {
+            player.x = random(-1920,1920);
+            player.y = random(-1920,1920);
+            player.score = 20;
+        }),
         socket:socket,
     }
-    player.update = function(){
+    /*player.update = function(){
         if(player.pressingRight) {
             player.x += player.speed;
         }
@@ -87,16 +92,11 @@ function playerObj(socket) {
         }else {
             player.speed = 10;
         }
-    }
-    player.die = function() {
-        player.x = random(-1920,1920);
-        player.y = random(-1920,1920);
-        player.score = 20;
-    }
+    }*/
     return player;
 }
 
-function removeFood(pos,player) {
+function eatFood(pos,player) {
     player.score+=5;
     foond.splice(pos,1);
 }
@@ -108,6 +108,7 @@ io.sockets.on('connection',function(socket) {
     socket.id = bruh;
 
     var player = playerObj(socket);
+    //print(player);
 
     //print('socket connection');
     socket.on('disconnect',function() {
@@ -125,7 +126,7 @@ io.sockets.on('connection',function(socket) {
         foond.push(foodObj(data.x,data.y));
     });
     
-    socket.on('keyPress',function(data) {
+    /*socket.on('keyPress',function(data) {
         if(data.key != undefined) {
             data.key = data.key.toLowerCase();
             if(data.key == "w") {
@@ -141,13 +142,23 @@ io.sockets.on('connection',function(socket) {
             }
         }
         
-    });
+    });*/
     socket.on('name',function(data) {
         //print(data.name);
         playerList[socket.id] = player;
         player.name=data.name;
 
         players++;
+    });
+
+    socket.on('position',function(data) {
+        player.x = data.x;
+        player.y = data.y;
+        //alright bro don't go saying that im contradicting my self
+        //i gotta do this for 2 reasons 
+        //incase i want to send more information
+        //and because many things use player.x and player.y so i don't feel like changing it to player.position.x 
+        //i have no brain i just put player = data; so it got rid of everything but x and y
     });
     
     bruh++;
@@ -166,11 +177,11 @@ setInterval(function() {
     var data = [];
 
     playerList.forEach(player => {
-        player.update();
+        //player.update();
         let foodArrayPos = 0;
         foond.forEach(food => {
             if(checkCollide(food.x,food.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
-                removeFood(foodArrayPos,player);
+                eatFood(foodArrayPos,player);
             }
             foodArrayPos++;
         });
@@ -186,11 +197,11 @@ setInterval(function() {
                 }
             }
         });
-        player.socket.emit('you',{
-            x:player.x,
-            y:player.y,
+        //player.socket.emit('you',{
+        //    x:player.x,
+        //    y:player.y,
             //bro im gonna start crying i was sending unused and unneeded information
-        });
+        //});
         data.push({
             x:player.x,
             y:player.y,
@@ -204,6 +215,7 @@ setInterval(function() {
     //    print(data);
     //}
     playerList.forEach(player => {
+        //should i get rid of the lag when you mvoe sometimes?
         player.socket.emit('newData',data);
     });
 },1000/30);
