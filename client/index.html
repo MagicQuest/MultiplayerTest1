@@ -8,21 +8,42 @@
 
     </script>
     <link rel="stylesheet" href="https://magicquest.github.io/clickable.css">
+    <link rel="stylesheet" href="https://magicquest.github.io/font.css">
     <script src="https://magicquest.github.io/oof.js">
 
     </script>
+    <style>
+        #background {
+            background-image: url("../client/img/grid.png");
+            background-repeat: repeat;
+            animation: slide 60s linear infinite;
+        }
+        @keyframes slide{
+            0%{
+                background-position-x: 0px;
+                background-position-y: 0px;
+            }
+            100%{
+                background-position-x: var(--x);
+                background-position-y: var(--y);
+            }
+        }
+    </style>
 </head>
-<body style="overflow: hidden;">
+<body id="background" style="overflow: hidden;">
     <center id="center" style="font-size: 30px;">
-        <input style="font-size: 30px;" id="name" placeholder="type your name here!">
-
-        </input>
-        <button style="font-size: 30px;" onclick = "answer()">
-            Play!
-        </button>
+        <h1>
+            🔴Discount Agar.io🔴
+        </h1>
+        <form onsubmit="event.preventDefault(); answer();">
+            <input style="font-size: 30px;" id="name" placeholder="type your name here!">
+            <button style="font-size: 30px;">
+                Play!
+            </button>
+        </form>
     </center>
     <canvas style="display: none;" id="ctx">
-
+        
     </canvas>
     <!--center>
         <h1>
@@ -30,6 +51,11 @@
         </h1>
     </center-->
     <script>
+        document.documentElement.addEventListener("mousemove", event => {
+            document.body.style.setProperty("--x", (event.clientX - (document.documentElement.clientWidth/2))*5 + "px");
+            document.body.style.setProperty("--y", (event.clientY - (document.documentElement.clientHeight/2))*5 + "px");
+        });
+
         function get(doc) {
             return document.getElementById(doc);
         }
@@ -38,6 +64,7 @@
             socket.emit('name',{name:get("name").value});
             canvas.style.display = "inline";
             get("center").style.display = "none";
+            document.body.id = "";
         }
         var socket = io();
         var canvas = get('ctx');
@@ -46,89 +73,131 @@
             x:250,
             y:250,
         };
+        //var zoom = 1;
         //var distance = {
         //    x:0,
         //    y:0,
         //}
         socket.on('you', function(data) {
-            you.x = data.x;
-            you.y = data.y;
-            /*if(data.w) {
-                distance.y-=data.maxSpeed;
-            }if(data.s) {
-                distance.y+=data.maxSpeed;
-            }if(data.a) {
-                distance.x-=data.maxSpeed;
-            }if(data.d) {
-                distance.x+=data.maxSpeed;
-            }*/
+            you = data;
+            //dude im extremely dense WHEN DID I WRITE 
+            //you.x = data.x
+            //you.y = data.y
+            //OH MY GOD IM GONNA CRY
         })
+
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
         socket.emit('setSize', {
-                width:canvas.width,
-                height:canvas.height,
-            })
-        window.onbeforeunload = confirmExit;
-        function rgbToHex(r, g, b) {
-            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-        }   
+            width:canvas.width,
+            height:canvas.height,
+        });
         addEventListener("resize",function(event) {
             canvas.width = innerWidth - 5
             canvas.height = innerHeight - 5
             socket.emit('setSize', {
                 width:canvas.width,
                 height:canvas.height,
-            })
-        })
-        addEventListener("mousedown",function(event) {
-            //socket.emit('addFood',{x:event.x,y:event.y});
-        }); 
-        // b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b u r h   b r u h   b r u h   b r u h   i   g o t t a   g o   p e e   a n d   i   m   a l s o   g o i n g   t o   s   l   e   e   p 
+            });
+        });
+
+        //document.documentElement.addEventListener("wheel",function(event) {
+            //zoom += event.deltaY/100;
+            //print(zoom);
+        //},{passive: true});
+
+        window.onbeforeunload = confirmExit;
+
+        function confirmExit() {
+            socket.emit('closed');
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
         function componentToHex(c) {
             var hex = c.toString(16);
             return hex.length == 1 ? "0" + hex : hex;
         }
+
+        addEventListener("mousedown",function(event) {
+            //socket.emit('addFood',{x:event.x,y:event.y});
+        }); 
+        // b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b u r h   b r u h   b r u h   b r u h   i   g o t t a   g o   p e e   a n d   i   m   a l s o   g o i n g   t o   s   l   e   e   p 
+        
         socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.font="30px Comic Sans MS";
+            ctx.textAlign = "center";
             //print(data);
             //print(data[0].food);
             //if(data[0] != undefined) {
-                for(var i = 0;i < data[0].food.length;i++) {
-                    var food = data[0].food[i];
-                    if(food != undefined) {
-                        var x = food.x - you.x + canvas.width/2;
-                        var y = food.y - you.y + canvas.height/2;
-                        circle(ctx,x/*-distance.x/2*/,y/*-distance.y/2*/,10,360,food.color);
-                    }
-                    
+            //this is unbelieveabley confusing oh my god i just realized that athese are players jesus christ
+            for(var i = 0;i < data[0].food.length;i++) {
+                var food = data[0].food[i];
+                if(food != undefined) {
+                    var x = (food.x - you.x + canvas.width/2)/*/zoom;*/
+                    var y = (food.y - you.y + canvas.height/2)/*/zoom;*/
+                    circle(ctx,x/*-distance.x/2*/,y/*-distance.y/2*/,10/*/zoom*/,360,food.color);
                 }
+            }
            // }
-            for(var i = 0;i<data.length;i++) {
-
-                    ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
-                    print(data[i].size);
-                    var x = data[i].x - you.x + canvas.width/2;
-                    var y = data[i].y - you.y + canvas.height/2;
-                    //if(data[i].x == you.x && data[i].y == you.y) {
-                        ctx.fillText(data[i].name,x-10,y-data[i].size)
-                        ctx.fillRect(x-(data[i].size/2),y-(data[i].size/2),data[i].size,data[i].size);
-                   // }else {
-                    //    ctx.fillText(data[i].name,(x-10)/*-distance.x/2*/,(y-data[i].size)/*-distance.y/2*/)
-                     //   ctx.fillRect((x-(data[i].size/2))/*-distance.x/2*/,(y-(data[i].size/2))/*-distance.y/2*/,data[i].size,data[i].size);
-                    //}
-                    
+            for(let i = 0;i<data.length;i++) {
+                ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
+                //print(data[i].size);
+                let x = (data[i].x - you.x + ((canvas.width/2)/**zoom*/));/*/zoom;*/
+                let y = (data[i].y - you.y + ((canvas.height/2)/**zoom*/));/*/zoom;*/
+                ctx.fillText(data[i].name,x,(y-data[i].size/2)-15);
+                ctx.fillRect(x-(data[i].size/2),y-(data[i].size/2),data[i].size/*/zoom*/,data[i].size/*/zoom*/);
                 
+            }
+            ctx.fillRect(20,20,235,235);
+            ctx.clearRect(25,25,225,225);
+            for(let i = 0;i<data.length;i++) {
+                ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
+                //bro a minimap is the hardest thing to make if you don't understand what is even happening
+                let x = (data[i].x - you.x + (225/10));
+                x-=(data[i].size/2);
+                let y = (data[i].y - you.y + (225/10));
+                y-=(data[i].size/2);
+                x+= 225*4.5;
+                y+= 225*4.5;
+
+                let number = 8;
+                let totalx = (x/number)+(data[i].size/number);
+                let totaly = (y/number)+(data[i].size/number);
+                if(totalx < 25) {
+                    //ctx.fillRect(x/4,y/4,data[i].size/4,25-((y/4)+(data[i].size/4)));
+                }else if(totalx > 275) {
+                    //ctx.fillRect(x/4,y/4,data[i].size/4,data[i].size/4);
+                }else if(totaly > 275) {
+
+                }else if(totaly < 25) {
+
+                }else {
+                    ctx.font="10px Comic Sans MS";
+                    //ctx.textAlign = "center";
+                    ctx.fillText(data[i].name,(x+(data[i].size/2))/number,(y/number)-7);
+                    ctx.fillRect(x/number,y/number,data[i].size/number,data[i].size/number);
+                }
+                //print(data[i].size);
+                //let x = (data[i].x - you.x + ((235)/**zoom*/));/*/zoom;*/
+                //let y = (data[i].y - you.y + ((235)/**zoom*/));/*/zoom;*/
+                //if(data[i].x == you.x && data[i].y == you.y) {
+                //    x = (235-data[i].size/4)+320;
+                //    y = (235-data[i].size/4)+320;
+                    //data[i].size = 20;    
+               // }else {
+               //     x += 235;
+               //     y += 235;
+               // }
+                //ctx.fillText(data[i].name,(x-data[i].name.length*5)-data[i].size/5,(y-data[i].size/2)-15);
+                //ctx.fillRect(x/4,y/4,data[i].size/4/*/zoom*/,data[i].size/4/*/zoom*/);
                 
             }
             //ctx.fillRect(data.x-10,data.y-10,20,20);
             //ctx.fillText('N',data.x,data.y);
         });
-        function confirmExit() {
-            socket.emit('closed');
-                //return "You have attempted to leave this page. Are you sure?";
-        }
         document.onkeydown = function(event) {
             socket.emit('keyPress',{
                 key:event.key,
@@ -137,7 +206,6 @@
             var data = {
                 key:event.key,
             }
-            
         };
         document.onkeyup = function(event) {
             socket.emit('keyPress',{
