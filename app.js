@@ -67,11 +67,6 @@ function playerObj(socket) {
         pressingShift:false,*/
         name:"Player",
         speed:10,
-        die: (() => {
-            player.x = random(-1920,1920);
-            player.y = random(-1920,1920);
-            player.score = 20;
-        }),
         socket:socket,
     }
     /*player.update = function(){
@@ -189,11 +184,11 @@ setInterval(function() {
             if(checkCollide(player2.x,player2.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
                 if(player.score > player2.score) {
                     player.score += player2.score;
-                    player2.die();
+                    player2.socket.emit('die');
                     
                 }else if(player2.score > player.score) {
                     player2.score += player.score;
-                    player.die();
+                    player.socket.emit('die');
                 }
             }
         });
@@ -216,6 +211,8 @@ setInterval(function() {
     //}
     playerList.forEach(player => {
         //should i get rid of the lag when you mvoe sometimes?
-        player.socket.emit('newData',data);
+        //ok in heroku its worse :slight_frown:
+        let us = [{name: player.name, color: player.color}];
+        player.socket.emit('newData',{data,us});
     });
 },1000/30);
