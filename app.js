@@ -156,10 +156,12 @@ io.sockets.on('connection',function(socket) {
     });
     socket.on('name',function(data) {
         //print(data.name);
-        playerList[socket.id] = player;
+	if(playerList[socket.id] == undefined) {
+	    playerList[socket.id] = player;
+	    players++;
+	}
         player.name=data.name;
 
-        players++;
 
         socket.broadcast.emit('players',{players});
     });
