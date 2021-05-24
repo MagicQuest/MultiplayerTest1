@@ -28,9 +28,6 @@
                 background-position-y: var(--y);
             }
         }
-        * {
-            outline: none;
-        }
     </style>
 </head>
 <body id="background" style="overflow: hidden;">
@@ -44,6 +41,9 @@
                 Play!
             </button>
         </form>
+        <h3 id="playerz">
+            Players: 0
+        </h3>
     </center>
     <canvas style="display: none;" id="ctx">
         
@@ -54,10 +54,6 @@
         </h1>
     </center-->
     <script>
-        function random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1) ) + min;
-}
-
         document.documentElement.addEventListener("mousemove", event => {
             document.body.style.setProperty("--x", (event.clientX - (document.documentElement.clientWidth/2))*5 + "px");
             document.body.style.setProperty("--y", (event.clientY - (document.documentElement.clientHeight/2))*5 + "px");
@@ -76,36 +72,26 @@
         var socket = io();
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
-        //var zoom = 1;
         var you = {
-            x:random(-1920,1920),
-            y:random(-1920,1920),
-            die: false,
-        };
-        var movementVector = {
-            x: 0,
-            y: 0,
-        };
-        var keys = {
-            w: false,
-            s: false, 
-            a: false,
-            d: false,
-            shift: false,
+            x:250,
+            y:250,
         };
         //var zoom = 1;
         //var distance = {
         //    x:0,
         //    y:0,
         //}
-
         socket.on('you', function(data) {
             you = data;
             //dude im extremely dense WHEN DID I WRITE 
             //you.x = data.x
             //you.y = data.y
             //OH MY GOD IM GONNA CRY
-        })
+        });
+        socket.on('players', function(data) {
+            print(data);
+            get("playerz").innerHTML = "Players: " + data.players;
+        });
 
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
@@ -156,45 +142,7 @@
         }); 
         // b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b u r h   b r u h   b r u h   b r u h   i   g o t t a   g o   p e e   a n d   i   m   a l s o   g o i n g   t o   s   l   e   e   p 
         
-        socket.on('die',function() {
-            print("die")
-            you = {x: you.x,y:you.y,die: true};
-        });
-        
-        setInterval(function() {
-            ctx.font="30px Comic Sans MS";
-            movementVector = {x:0,y:0};
-            let addshit = (keys.shift) ? 20 : 10;
-            if(keys.w) {
-                movementVector.y = -addshit;
-            }
-            if(keys.s) {
-                movementVector.y = addshit;
-            }
-            if(keys.a) {
-                movementVector.x = -addshit;
-            }
-            if(keys.d) {
-                movementVector.x = addshit;
-            }
-            you.x += movementVector.x;
-            you.y += movementVector.y;
-            if(you.die) {
-                you.x = random(-1920,1920);
-                you.y = random(-1920,1920);
-                you.die = false;
-            }
-            //alright alright bro you can't add them for some reason and i had repeated problems with that
-            //ctx.fillText("Position: w: " + keys.w + ", s: " + keys.s + "\na: " + keys.a + ", d: " + keys.d,500,500);
-            socket.emit("position",you);
-        },1000/30);
-
-        socket.on('newData',function(info) {
-            let data = info.data;
-            let us = info.us[0];
-            //print(info.us);
-            //ok make it so that you tell the server where you going
-            //and the server tell everybody else so it is more natural when you lag
+        socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.font="30px Comic Sans MS";
             ctx.textAlign = "center";
@@ -205,22 +153,17 @@
             for(var i = 0;i < data[0].food.length;i++) {
                 var food = data[0].food[i];
                 if(food != undefined) {
-                    var x = (food.x - you.x + canvas.width/ /*zoom*/2)
-                    var y = (food.y - you.y + canvas.height/ /*zoom*/2)
-                    circle(ctx,x/*zoom*/ /*-distance.x/2*/,y/*zoom*/ /*-distance.y/2*/,10/*zoom*/,360,food.color);
+                    var x = (food.x - you.x + canvas.width/2)/*/zoom;*/
+                    var y = (food.y - you.y + canvas.height/2)/*/zoom;*/
+                    circle(ctx,x/*-distance.x/2*/,y/*-distance.y/2*/,10/*/zoom*/,360,food.color);
                 }
             }
            // }
             for(let i = 0;i<data.length;i++) {
                 ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
                 //print(data[i].size);
-                let x = (data[i].x - you.x + ((canvas.width/ /*zoom*/2)));
-                let y = (data[i].y - you.y + ((canvas.height/ /*zoom*/2)));
-                if(data[i].name == us.name && data[i].color.x == us.color.x && data[i].color.y == us.color.y && data[i].color.z == us.color.z) {
-                    x = canvas.width/2;
-                    y = canvas.height/2;
-                }
-                //dude this sucks i have to do things indivirtuafkjlty
+                let x = (data[i].x - you.x + ((canvas.width/2)/**zoom*/));/*/zoom;*/
+                let y = (data[i].y - you.y + ((canvas.height/2)/**zoom*/));/*/zoom;*/
                 ctx.fillText(data[i].name,x,(y-data[i].size/2)-15);
                 ctx.fillRect(x-(data[i].size/2),y-(data[i].size/2),data[i].size/*/zoom*/,data[i].size/*/zoom*/);
                 
@@ -274,22 +217,6 @@
             //ctx.fillText('N',data.x,data.y);
         });
         document.onkeydown = function(event) {
-            let key = event.key.toLowerCase();
-            keys.w = (key == "w") ? true : keys.w;
-            keys.s = (key == "s") ? true : keys.s;
-            keys.a = (key == "a") ? true : keys.a;
-            keys.d = (key == "d") ? true : keys.d;
-            keys.shift = (key == "shift") ? true : keys.shift;
-        }
-        document.onkeyup = function(event) {
-            let key = event.key.toLowerCase();
-            keys.w = (key == "w") ? false : keys.w;
-            keys.s = (key == "s") ? false : keys.s;
-            keys.a = (key == "a") ? false : keys.a;
-            keys.d = (key == "d") ? false : keys.d;
-            keys.shift = (key == "shift") ? false : keys.shift;
-        }
-        /*document.onkeydown = function(event) {
             socket.emit('keyPress',{
                 key:event.key,
                 state:true
@@ -303,7 +230,7 @@
                 key:event.key,
                 state:false
             })
-        }*/
+        }
     </script>
     
 </body>

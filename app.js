@@ -5,6 +5,16 @@ const serv = require('http').Server(app);
 app.get('/',function(req,res) {
     res.sendFile(__dirname + '/client/index.html');
 });
+app.get('/trolling',function(req,res) {
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    if(ip.startsWith("35")) {
+        res.sendFile(__dirname + '/client/img/trolling.png');
+    }else {
+        res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    }
+});
+
 app.use('/client',express.static(__dirname + '/client'));
 
 serv.listen(process.env.PORT || 2000);
@@ -56,20 +66,20 @@ function foodObj(x,y) {
 //jesus this is terrible
 function playerObj(socket) {
     var player = {
-        x:0,//random(-1920,1920),
-        y:0,//random(-1920,1920),
+        x:random(-1920,1920),
+        y:random(-1920,1920),
         score:20,
         color:{x:random(0,255),y:random(0,255),z:random(0,255)},
-        /*pressingRight:false,
+        pressingRight:false,
         pressingLeft:false,
         pressingUp:false,
         pressingDown:false,
-        pressingShift:false,*/
+        pressingShift:false,
         name:"Player",
         speed:10,
         socket:socket,
     }
-    /*player.update = function(){
+    player.update = function(){
         if(player.pressingRight) {
             player.x += player.speed;
         }
@@ -87,7 +97,12 @@ function playerObj(socket) {
         }else {
             player.speed = 10;
         }
-    }*/
+    }
+    player.die = function() {
+        player.x = random(-1920,1920);
+        player.y = random(-1920,1920);
+        player.score = 20;
+    }
     return player;
 }
 
@@ -103,12 +118,13 @@ io.sockets.on('connection',function(socket) {
     socket.id = bruh;
 
     var player = playerObj(socket);
-    //print(player);
 
     //print('socket connection');
     socket.on('disconnect',function() {
-        delete playerList[socket.id];
-        players--;
+        if(playerList[socket.id] != undefined) {
+            delete playerList[socket.id];
+            players--;
+        }
         //print('socket disconnection')
     });
     /*socket.on('setSize',function(data) {
@@ -121,7 +137,7 @@ io.sockets.on('connection',function(socket) {
         foond.push(foodObj(data.x,data.y));
     });
     
-    /*socket.on('keyPress',function(data) {
+    socket.on('keyPress',function(data) {
         if(data.key != undefined) {
             data.key = data.key.toLowerCase();
             if(data.key == "w") {
@@ -137,25 +153,19 @@ io.sockets.on('connection',function(socket) {
             }
         }
         
-    });*/
+    });
     socket.on('name',function(data) {
         //print(data.name);
         playerList[socket.id] = player;
         player.name=data.name;
 
         players++;
+
+        socket.broadcast.emit('players',{players});
     });
 
-    socket.on('position',function(data) {
-        player.x = data.x;
-        player.y = data.y;
-        //alright bro don't go saying that im contradicting my self
-        //i gotta do this for 2 reasons 
-        //incase i want to send more information
-        //and because many things use player.x and player.y so i don't feel like changing it to player.position.x 
-        //i have no brain i just put player = data; so it got rid of everything but x and y
-    });
-    
+    socket.emit('players',{players});
+
     bruh++;
 })
 setInterval(function() {
@@ -172,7 +182,7 @@ setInterval(function() {
     var data = [];
 
     playerList.forEach(player => {
-        //player.update();
+        player.update();
         let foodArrayPos = 0;
         foond.forEach(food => {
             if(checkCollide(food.x,food.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
@@ -184,19 +194,19 @@ setInterval(function() {
             if(checkCollide(player2.x,player2.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
                 if(player.score > player2.score) {
                     player.score += player2.score;
-                    player2.socket.emit('die');
+                    player2.die();
                     
                 }else if(player2.score > player.score) {
                     player2.score += player.score;
-                    player.socket.emit('die');
+                    player.die();
                 }
             }
         });
-        //player.socket.emit('you',{
-        //    x:player.x,
-        //    y:player.y,
+        player.socket.emit('you',{
+            x:player.x,
+            y:player.y,
             //bro im gonna start crying i was sending unused and unneeded information
-        //});
+        });
         data.push({
             x:player.x,
             y:player.y,
@@ -210,9 +220,6 @@ setInterval(function() {
     //    print(data);
     //}
     playerList.forEach(player => {
-        //should i get rid of the lag when you mvoe sometimes?
-        //ok in heroku its worse :slight_frown:
-        let us = [{name: player.name, color: player.color}];
-        player.socket.emit('newData',{data,us});
+        player.socket.emit('newData',data);
     });
 },1000/30);
