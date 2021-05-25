@@ -19,33 +19,121 @@
             animation: slide 60s linear infinite;
         }
         @keyframes slide{
-            0%{
+            0% {
                 background-position-x: 0px;
                 background-position-y: 0px;
             }
-            100%{
+            100% {
                 background-position-x: var(--x);
                 background-position-y: var(--y);
             }
         }
+        input, button {
+            outline: none;
+        }
+        input {
+            border-radius: 10px;
+        }
+        #center {
+            font-size: 30px;
+        }
+        #chat {
+            z-index: 100;
+        }
+        #ctx {
+            display: none;
+            z-index: -100;
+        }
+        #chatbox {
+            z-index: 100;
+            position: absolute;
+            justify-content: right;
+            text-align: center;
+            right:0;
+            bottom:0;
+        }
+        #menuOverlay {
+            position:absolute;
+            background-color: rgba(0,0,0,.5);
+            width: 100%;
+            height: 100%;
+            top:0;
+            left:0;
+        }
+        #menu {
+            position: relative;
+            border-radius: 10px;
+            width: 25%;
+            height: 80%;
+            background-color: white;
+            top:10%;
+        }
+        deez > *{
+            animation: disappear 10s linear normal;
+        }
+        deez {
+            animation: disappear 10s linear normal;
+        }
+        @keyframes disappear {
+            0% {
+                opacity: 100;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        .sheeshbutton {
+            background-color: rgb(0, 200, 0);
+            padding: 8px 16px;
+            text-align: center;
+            border-radius: 10px;
+            border: none;
+            color: white;
+        }
+        .sheeshbutton:hover {
+            background-color: rgb(0, 175, 0);
+        }
     </style>
 </head>
-<body id="background" style="overflow: hidden;">
-    <center id="center" style="font-size: 30px;">
-        <h1>
-            🔴Discount Agar.io🔴
-        </h1>
-        <form onsubmit="event.preventDefault(); answer();">
-            <input style="font-size: 30px;" id="name" placeholder="type your name here!">
-            <button style="font-size: 30px;">
-                Play!
-            </button>
-        </form>
-        <h3 id="playerz">
-            Players: 0
-        </h3>
+<body id="background" style="overflow: hidden;width:100%;height:100%">
+    <center>
+        <div id="center">
+            <h1>
+                🔴Discount Agar.io🔴
+            </h1>
+            <form onsubmit="event.preventDefault(); answer();">
+                <input style="font-size: 30px;" id="name" placeholder="type your name here!">
+                <button class="sheeshbutton" style="font-size: 30px;">
+                    Play!
+                </button>
+            </form>
+            <h3 id="playerz">
+                Players: 0
+            </h3>    
+        </div>
+
+        <div id="chat" style="display:none;">
+            <form onsubmit="event.preventDefault();socket.emit('message',this.firstElementChild.value);this.firstElementChild.value = '';">
+                <input type="text" placeholder="type here to chat" style="font-size:30px;position:absolute;left: calc(50% - 175px);bottom:100px;">
+            </form>
+        </div>
+
+        <div id="menuOverlay" style="display:none;" onclick = "//this.style.display = 'none';">
+            <div id="menu">
+                <form onsubmit="event.preventDefault(); socket.emit('name',{name:this.firstElementChild.value});this.firstElementChild.value = '';this.parentElement.parentElement.style.display = 'none';">
+                    <input placeholder="name: " style="width: 40%;font-size:25px;margin-top:40%;">
+                    <!--haha stole this button from w3schools-->
+                    <button class="sheeshbutton" style="display:block;width: 40%;font-size:25px;">Resume »</span></button>
+                </form>
+            </div>
+        </div>
     </center>
-    <canvas style="display: none;" id="ctx">
+
+    <div id="chatbox">
+
+    </div>
+
+    <canvas id="ctx">
         
     </canvas>
     <!--center>
@@ -92,6 +180,14 @@
             print(data);
             get("playerz").innerHTML = "Players: " + data.players;
         });
+        socket.on('message',function(message) {
+            let newMessage = create("p");
+            newMessage.innerHTML = message;
+            place(newMessage,get("chatbox"));
+            setTimeout(function() {
+                del(newMessage,get("chatbox"));
+            },10000);
+        });
 
         canvas.width = innerWidth - 5;
         canvas.height = innerHeight - 5;
@@ -99,7 +195,7 @@
         //    width:canvas.width,
         //    height:canvas.height,
         //});
-        function circle(ctx,x,y,r,endAngle = 360,fillColor = "0") {
+        function circle(x,y,r,endAngle = 360,fillColor = "0") {
             ctx.beginPath();
             
             ctx.arc(x, y, r, 0, (endAngle/180) * Math.PI);
@@ -139,6 +235,13 @@
 
         addEventListener("mousedown",function(event) {
             //socket.emit('addFood',{x:event.x,y:event.y});
+            //print("deez");
+            //print("EX "+event.x);
+            //print("YX "+you.x);
+            //print("EY "+event.y);
+           // print("YY "+you.y);
+            //print("nuts");
+            //socket.emit('splitFood',{x:event.x+you.x,y:event.x+you.y});
         }); 
         // b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b r u h   b u r h   b r u h   b r u h   b r u h   i   g o t t a   g o   p e e   a n d   i   m   a l s o   g o i n g   t o   s   l   e   e   p 
         
@@ -155,7 +258,12 @@
                 if(food != undefined) {
                     var x = (food.x - you.x + canvas.width/2)/*/zoom;*/
                     var y = (food.y - you.y + canvas.height/2)/*/zoom;*/
-                    circle(ctx,x/*-distance.x/2*/,y/*-distance.y/2*/,10/*/zoom*/,360,food.color);
+                    if(!food.size) {
+                        circle(x/*-distance.x/2*/,y/*-distance.y/2*/,10/*/zoom*/,360,food.color);
+                    }else {
+                        ctx.fillStyle = food.color;
+                        ctx.fillRect(x,y,food.size/*/zoom*/,food.size/*/zoom*/);
+                    }
                 }
             }
            // }
@@ -217,19 +325,38 @@
             //ctx.fillText('N',data.x,data.y);
         });
         document.onkeydown = function(event) {
-            socket.emit('keyPress',{
-                key:event.key,
-                state:true
-            })
-            var data = {
-                key:event.key,
+            if(event.key == "Enter") {
+                if(get("center").style.display == "none" && get('menuOverlay').style.display == "none") {
+                    if(get('chat').style.display == "inline") {
+                        get('chat').style.display = "none";
+                    }else {
+                        get('chat').style.display = "inline";
+                        get('chat').firstElementChild.firstElementChild.focus();
+                    }
+                }
+            }
+            if(event.key == "Escape") {
+                if(get("center").style.display == "none") {
+                    if(get('menuOverlay').style.display == "inline") {
+                        get('menuOverlay').style.display = "none";
+                    }else {
+                        get('menuOverlay').style.display = "inline";
+                        get('menu').firstElementChild.firstElementChild.focus();
+                    }
+                }
+            }
+            if(get('chat').style.display == "none" && get('menuOverlay').style.display == "none") {
+                socket.emit('keyPress',{
+                    key:event.key,
+                    state:true
+                });
             }
         };
         document.onkeyup = function(event) {
             socket.emit('keyPress',{
                 key:event.key,
                 state:false
-            })
+            });
         }
     </script>
     

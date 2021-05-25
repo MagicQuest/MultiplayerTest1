@@ -60,6 +60,12 @@ function foodObj(x,y) {
             y:y,
             color:rgbToHex(random(0,255),random(0,255),random(0,255))};
 }
+function playerFoodObj(x,y,color,size) {
+    return {x:x,
+            y:y,
+            color:color,
+            size:size};
+}
 //oh my  god what was i on bro
 //function Player(socket.id, socket.color, socket)
 //why would i pass in 2 members of the socket when i literally give the socket itself
@@ -136,6 +142,16 @@ io.sockets.on('connection',function(socket) {
     socket.on('addFood',function(data) {
         foond.push(foodObj(data.x,data.y));
     });
+    socket.on('message',function(message) {
+        if(message != "") {
+            socket.broadcast.emit('message',`<deez style="font-size:30px;background-color:rgba(${255-player.color.x},${255-player.color.y},${255-player.color.z},.125);padding: 8px 16px;"><b style='color:rgb(${player.color.x},${player.color.y},${player.color.z})'>`+player.name+"</b>: "+message+"</deez>");
+        }
+    });
+
+    socket.on('splitFood',function(data) {
+        player.score -= 5;
+        foond.push(playerFoodObj(data.x,data.y,rgbToHex(player.color.x,player.color.y,player.color.z),5));
+    });
     
     socket.on('keyPress',function(data) {
         if(data.key != undefined) {
@@ -156,10 +172,14 @@ io.sockets.on('connection',function(socket) {
     });
     socket.on('name',function(data) {
         //print(data.name);
-	if(playerList[socket.id] == undefined) {
-	    playerList[socket.id] = player;
-	    players++;
-	}
+        if(playerList[socket.id] == undefined) {
+            playerList[socket.id] = player;
+            players++;
+        }else {
+            if(data.name == "") {
+                data.name = player.name;
+            }
+        }
         player.name=data.name;
 
 
