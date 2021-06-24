@@ -13,7 +13,8 @@ app.get('/trolling',function(req,res) {
     if(ip.startsWith("35")) {
         res.sendFile(__dirname + '/client/img/trolling.png');
     }else {
-        res.redirect(atob(req.url.substring("/trolling?".length)));
+        //print(atob(req.url.substring("/trolling?".length)));
+        res.redirect(Buffer.from(req.url.substring("/trolling?".length), 'base64').toString());
     }
 });
 app.get('/trollmaker',function(req,res) {
