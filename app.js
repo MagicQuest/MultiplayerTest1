@@ -6,13 +6,18 @@ app.get('/',function(req,res) {
     res.sendFile(__dirname + '/client/index.html');
 });
 app.get('/trolling',function(req,res) {
+    print(req.url.substring("/trolling?".length));
+
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     if(ip.startsWith("35")) {
         res.sendFile(__dirname + '/client/img/trolling.png');
     }else {
-        res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        res.redirect(atob(req.url.substring("/trolling?".length)));
     }
+});
+app.get('/trollmaker',function(req,res) {
+    res.sendFile(__dirname + '/client/trollingmaker.html');
 });
 
 app.use('/client',express.static(__dirname + '/client'));
@@ -144,7 +149,7 @@ io.sockets.on('connection',function(socket) {
     });
     socket.on('message',function(message) {
         if(message != "") {
-            socket.broadcast.emit('message',`<deez style="font-size:30px;background-color:rgba(${255-player.color.x},${255-player.color.y},${255-player.color.z},.125);padding: 8px 16px;"><b style='color:rgb(${player.color.x},${player.color.y},${player.color.z})'>`+player.name+"</b>: "+message+"</deez>");
+            socket.broadcast.emit('message',`<deez style="font-size:30px;background-color:rgba(0,0,0,.25);padding: 8px 16px;"><b style='color:rgb(${player.color.x},${player.color.y},${player.color.z})'>`+player.name+"</b>: "+message+"</deez>");
         }
     });
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <meta property="og:title" content="troll maker" />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content='a url "shortener"' />
+    <link rel='stylesheet' type='text/css' media='screen' href='https://magicquest.github.io/font.css'>
+    <link rel="stylesheet" href="https://magicquest.github.io/clickable.css">
+    <title>troll maker</title>
+    <style>
+        body {
+            height: 100%;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        input::placeholder {
+            color: white;
+        }
+        button {
+            border: 2mm outset rgba(170, 50, 220, .6);
+        }
+        button:active {
+            border: 2mm inset rgba(170, 50, 220, .6);
+        }
+    </style>
+</head>
+<body style="background-color: #0093E9;background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);">
+  <script src="https://magicquest.github.io/oof.js">
+
+  </script>
+  <center id="center1">
+    
+    <h1>
+      troll makerrz
+    </h1>
+    <form id="form">
+      <input placeholder="put the link here" id="input" type="text" style="border: thick double slateblue;background-color: #0093E9;color:white;font-size: large;">
+      <br>
+      <br>
+      <button style="border-radius: 10px;background-color: #0093E9;color:white;width: 250px;font-size: larger;">
+        Make troll!
+      </button>
+    </form>
+
+    <h1>
+      <a style="word-wrap: break-word;" id = "link">
+        your link will appear here
+      </a>
+    </h1>
+    <h2 id="dumb">
+
+    </h2>
+  </center>
+    <script>
+      let form = get("form");
+      let link = get("link");
+      let input = get("input");
+      form.onsubmit = function(e) {
+        e.preventDefault();
+        link.innerHTML = "https://pure-castle-61256.herokuapp.com/trolling?" + btoa(input.value);
+        link.setAttribute("href","https://pure-castle-61256.herokuapp.com/trolling?" + btoa(input.value));
+        get("dumb").innerHTML = "send this link in discord and it will be disguised as a troll face";
+      }
+    </script>
+</body>
+</html>
