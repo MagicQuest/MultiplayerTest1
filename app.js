@@ -5,21 +5,6 @@ const serv = require('http').Server(app);
 app.get('/',function(req,res) {
     res.sendFile(__dirname + '/client/index.html');
 });
-app.get('/trolling',function(req,res) {
-    print(req.url.substring("/trolling?".length));
-
-    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-    if(ip.startsWith("35")) {
-        res.sendFile(__dirname + '/client/img/trolling.png');
-    }else {
-        //print(atob(req.url.substring("/trolling?".length)));
-        res.redirect(Buffer.from(req.url.substring("/trolling?".length), 'base64').toString());
-    }
-});
-app.get('/trollmaker',function(req,res) {
-    res.sendFile(__dirname + '/client/trollingmaker.html');
-});
 
 app.use('/client',express.static(__dirname + '/client'));
 
