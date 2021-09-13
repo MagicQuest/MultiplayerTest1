@@ -14,11 +14,12 @@
     </script>
     <style>
         #background {
-            background-image: url("../client/img/grid.png");
+            background-image: url("client/img/grid.png");
             background-repeat: repeat;
-            animation: slide 60s linear infinite;
+            /*transition: background-position 1s;*/
+            /*animation: slide 60s linear infinite;*/
         }
-        @keyframes slide{
+        /*@keyframes slide{
             0% {
                 background-position-x: 0px;
                 background-position-y: 0px;
@@ -27,7 +28,7 @@
                 background-position-x: var(--x);
                 background-position-y: var(--y);
             }
-        }
+        }*/
         input, button {
             outline: none;
         }
@@ -67,12 +68,13 @@
             height: 80%;
             background-color: white;
             top:10%;
+            box-shadow: 0px 0px 50px rgb(0 0 0 / 25%);
         }
-        deez > *{
+        deez/*p*//*, p > **/{
             animation: disappear 10s linear normal;
-        }
-        deez {
-            animation: disappear 10s linear normal;
+            font-size:30px;
+            padding: 8px 16px;
+            /*transition: opacity 10s;*/
         }
         @keyframes disappear {
             0% {
@@ -83,7 +85,7 @@
             }
         }
         .sheeshbutton {
-            background-color: rgb(0, 200, 0);
+            background-image: linear-gradient(0deg, rgb(0,175, 0) 0%, rgb(0, 200, 0) 100%);
             padding: 8px 16px;
             text-align: center;
             border-radius: 10px;
@@ -91,22 +93,37 @@
             color: white;
         }
         .sheeshbutton:hover {
-            background-color: rgb(0, 175, 0);
+            background-image: linear-gradient(0deg, rgb(0,185, 0) 0%, rgb(0, 210, 0) 100%);
         }
-        p {
+        .sheeshbutton:active {
+            background-image: linear-gradient(0deg, rgb(0,210, 0) 0%, rgb(0, 185, 0) 100%);
+        }
+        /*p {
+            bruh this was the default setting???
             margin-block-end: 1em;
+        }*/ 
+        td, th {
+            border: 1px solid rgb(0,0,0);
+            text-align: left;
+            padding: 8px;
+        }
+        #leaderboard {
+            position: absolute;
+            right:0;
+            top:0;
+            background-color: rgba(0,0,0,.25);
         }
     </style>
 </head>
-<body id="background" style="overflow: hidden;width:100%;height:100%">
+<body id="background" style="margin: 0;overflow: hidden;">
     <center>
         <div id="center">
             <h1>
                 🔴Discount Agar.io🔴
             </h1>
-            <form onsubmit="event.preventDefault(); answer();">
+            <form onsubmit="event.preventDefault(); let value = this.firstElementChild.value; if(!value) {return;} answer();" style="display: inline-block;">
                 <input style="font-size: 30px;" id="name" placeholder="type your name here!">
-                <button class="sheeshbutton" style="font-size: 30px;">
+                <button class="sheeshbutton" style="font-size: 30px;display: block;width:100%;height: 40px;margin-top: 10px;">
                     Play!
                 </button>
             </form>
@@ -116,14 +133,14 @@
         </div>
 
         <div id="chat" style="display:none;">
-            <form onsubmit="event.preventDefault();socket.emit('message',this.firstElementChild.value);this.firstElementChild.value = '';">
-                <input type="text" placeholder="type here to chat" style="font-size:30px;position:absolute;left: calc(50% - 175px);bottom:100px;">
+            <form onsubmit="event.preventDefault(); let value = this.firstElementChild.value; if(!value){return;} socket.emit('message',value); this.firstElementChild.value = '';">
+                <input type="text" placeholder="type here to chat" style="font-size:30px;position:absolute;left: calc(50% - 175px);/*margin:auto;*/ bottom:100px;">
             </form>
         </div>
 
         <div id="menuOverlay" style="display:none;" onclick = "//this.style.display = 'none';">
             <div id="menu">
-                <form onsubmit="event.preventDefault(); socket.emit('name',{name:this.firstElementChild.value});this.firstElementChild.value = '';this.parentElement.parentElement.style.display = 'none';">
+                <form onsubmit="event.preventDefault(); let value = this.firstElementChild.value; if(!value) {return;} socket.emit('rename',value); this.firstElementChild.value = ''; this.parentElement.parentElement.style.display = 'none';">
                     <input placeholder="name: " style="width: 40%;font-size:25px;margin-top:40%;">
                     <!--haha stole this button from w3schools-->
                     <button class="sheeshbutton" style="display:block;width: 40%;font-size:25px;">Resume »</span></button>
@@ -139,15 +156,25 @@
     <canvas id="ctx">
         
     </canvas>
+
+    <div id="leaderboard">
+        <table style="width: 200px;">
+            <tbody>
+                
+            </tbody>
+        </table>
+    </div>
     <!--center>
         <h1>
             lmao
         </h1>
     </center-->
     <script>
-        document.documentElement.addEventListener("mousemove", event => {
-            document.body.style.setProperty("--x", (event.clientX - (document.documentElement.clientWidth/2))*5 + "px");
-            document.body.style.setProperty("--y", (event.clientY - (document.documentElement.clientHeight/2))*5 + "px");
+        document.addEventListener("mousemove", event => {
+            //document.body.style.setProperty("--x", (event.clientX - (document.documentElement.clientWidth/2))*5 + "px");
+            //document.body.style.setProperty("--y", (event.clientY - (document.documentElement.clientHeight/2))*5 + "px");
+            document.body.style.backgroundPositionX = (event.clientX - (document.documentElement.clientWidth/2))/5+"px";
+            document.body.style.backgroundPositionY = (event.clientY - (document.documentElement.clientHeight/2))/5+"px";
         });
 
         function get(doc) {
@@ -155,45 +182,126 @@
         }
         
         function answer() {
-            socket.emit('name',{name:get("name").value});
+            socket.emit('name',get("name").value);
+            //you.name = get("name").value;
             canvas.style.display = "inline";
-            get("center").style.display = "none";
+            //get("center").style.opacity = 1;
+            //setTimeout(()=> {
+                get("center").style.display = "none";
+            //},1000);
             document.body.id = "";
         }
         var socket = io();
         var canvas = get('ctx');
         var ctx = get("ctx").getContext('2d');
+        var chatbox = get("chatbox");
+        var players = {};
         var you = {
             x:250,
             y:250,
+            size: 25,
+            color: "redorsomething",
         };
         //var zoom = 1;
         //var distance = {
         //    x:0,
         //    y:0,
         //}
+        function createMessage(name,message,custom) {
+            //let color = {x: info.split("|")[1].split("&")[0],y: info.split("|")[1].split("&")[1],z: info.split("|")[1].split("&")[2]};
+            let color = !custom ? players[name].color : undefined;
+            let newMessage = create("p");
+            if(custom) {
+                newMessage.innerHTML = `<deez style="background-color:rgba(0,0,0,.25);">${message}</deez>`;
+            }else {
+                newMessage.innerHTML = `<deez style="background-color:rgba(0,0,0,.25);"><b style="color: rgb(${color.x},${color.y},${color.z})">${name}</b>: ${message}</deez>`;
+            }
+            place(newMessage,chatbox);
+            setTimeout(function() {
+                //newMessage.style.opacity = 0;
+                del(newMessage,chatbox);
+            },10000);
+        }
+        //function confirmExit() {
+            //socket.emit('closed');
+        //}
+
+        function rgbToHex(r, g, b) {
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+        function updateLeaderboard() {
+            get("leaderboard").firstElementChild.firstElementChild.innerHTML = "";
+            let sizes = [];
+            for (let person in players) {
+                players[person].checked = false;
+                sizes.push(players[person].size/5);
+                //console.log(`${property}: ${object[property]}`);
+            }
+            sizes.sort((a,b)=>b-a);
+            sizes.forEach(size => {
+                for(let person in players) {
+                    if(!players[person].checked && players[person].size/5 == size) {
+                        players[person].checked = true;
+                        get("leaderboard").firstElementChild.firstElementChild.innerHTML += `<tr><th>${person}</th><th>${players[person].size/5}</th></tr>`
+                    }
+                }
+            });
+        }
+        socket.on("joined",function(data) {
+            //console.log(data);
+            let name = data.split("|")[0];
+            let color = JSON.parse(data.split("|")[1]);
+            createMessage(undefined,`<b style="color: rgb(${color.x},${color.y},${color.z})">${name}</b> joined the game`,true);
+            players[name] = {color: color,size: 5};
+            get("playerz").innerHTML = "Players: " + data.split("|")[2];
+            updateLeaderboard();
+        });
+        socket.on("leave",function(data) {
+            get("playerz").innerHTML = "Players: " + data.split("|")[1];
+            let color = players[data.split("|")[0]].color;
+            createMessage(undefined,`<b style="color: rgb(${color.x},${color.y},${color.z})">${data.split("|")[0]}</b> left the game`,true);
+            delete players[data.split("|")[0]];
+            updateLeaderboard();
+        });
+        socket.on("start",function(data) {
+            you.color = data.color;
+            players = data.playerInfo;
+        });
         socket.on('you', function(data) {
-            you = data;
+            you.x = data.x;
+            you.y = data.y;
+            you.size = data.size;
+            //you.x = data.x != undefined ? data.x : you.x;
+            //you.y = data.y != undefined ? data.y : you.y;
+            //yeah ok i gotta do the thing again lmao (nevermind i'd need the player\s last position and do)
             //dude im extremely dense WHEN DID I WRITE 
             //you.x = data.x
             //you.y = data.y
             //OH MY GOD IM GONNA CRY
         });
-        socket.on('players', function(data) {
-            print(data);
-            get("playerz").innerHTML = "Players: " + data.players;
+        socket.on('players', function(peoples) {
+            //print(peoples);
+            get("playerz").innerHTML = "Players: " + peoples;
         });
-        socket.on('message',function(message) {
-            let newMessage = create("p");
-            newMessage.innerHTML = message;
-            place(newMessage,get("chatbox"));
-            setTimeout(function() {
-                del(newMessage,get("chatbox"));
-            },10000);
+        socket.on('message',function(info) {
+            //let name = info.split("|")[0];
+            //let color = {x: info.split("|")[1].split("&")[0],y: info.split("|")[1].split("&")[1],z: info.split("|")[1].split("&")[2]};
+            //let color = players[name].color;
+            //let message = info.split("|")[1];
+            createMessage(info.split("|")[0],info.split("|")[1],info.split("|")[2]);
         });
-
-        canvas.width = innerWidth - 5;
-        canvas.height = innerHeight - 5;
+        socket.on("rename",function(info) {
+            players[info.name] = players[info.oldName];
+            delete players[info.oldName]; 
+            createMessage(undefined,`<b style="color: rgb(${players[info.name].color.x},${players[info.name].color.y},${players[info.name].color.z})">${info.oldName}</b> changed their name to <b style="color: rgb(${players[info.name].color.x},${players[info.name].color.y},${players[info.name].color.z})">${info.name}</b>`,true);
+            updateLeaderboard();
+        });
+        canvas.width = innerWidth;
+        canvas.height = innerHeight;
         //socket.emit('setSize', {
         //    width:canvas.width,
         //    height:canvas.height,
@@ -209,8 +317,8 @@
             ctx.stroke();
         }
         addEventListener("resize",function(event) {
-            canvas.width = innerWidth - 5
-            canvas.height = innerHeight - 5
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
             //socket.emit('setSize', {
             //    width:canvas.width,
             //    height:canvas.height,
@@ -222,19 +330,7 @@
             //print(zoom);
         //},{passive: true});
 
-        window.onbeforeunload = confirmExit;
-
-        function confirmExit() {
-            socket.emit('closed');
-        }
-
-        function rgbToHex(r, g, b) {
-            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-        }
-        function componentToHex(c) {
-            var hex = c.toString(16);
-            return hex.length == 1 ? "0" + hex : hex;
-        }
+        //window.onbeforeunload = confirmExit;
 
         addEventListener("mousedown",function(event) {
             //socket.emit('addFood',{x:event.x,y:event.y});
@@ -250,67 +346,100 @@
         
         socket.on('newData',function(data) {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.font="30px Comic Sans MS";
+            ctx.font = "30px Chilanka";
             ctx.textAlign = "center";
             //print(data);
             //print(data[0].food);
             //if(data[0] != undefined) {
-            //this is unbelieveabley confusing oh my god i just realized that athese are players jesus christ
-            for(var i = 0;i < data[0].food.length;i++) {
-                var food = data[0].food[i];
-                if(food != undefined) {
-                    var x = (food.x - you.x + canvas.width/2)/*/zoom;*/
-                    var y = (food.y - you.y + canvas.height/2)/*/zoom;*/
+            //this is unbelieveabley confusing oh my god i just realized that athese are players jesus christ (BRO I JUST REALIZED I WAS SENDING FOOD WAY TO MANY TIMES)
+            data[0].forEach(food =>{
+                //var food = data[0][i];
+                //console.log(food);
+                //if(food != undefined) {
+                    let x = (food.x - you.x + canvas.width/2)/*/zoom;*/
+                    let y = (food.y - you.y + canvas.height/2)/*/zoom;*/
                     if(!food.size) {
                         circle(x/*-distance.x/2*/,y/*-distance.y/2*/,10/*/zoom*/,360,food.color);
                     }else {
                         ctx.fillStyle = food.color;
                         ctx.fillRect(x,y,food.size/*/zoom*/,food.size/*/zoom*/);
                     }
-                }
-            }
-           // }
-            for(let i = 0;i<data.length;i++) {
-                ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
-                //print(data[i].size);
-                let x = (data[i].x - you.x + ((canvas.width/2)/**zoom*/));/*/zoom;*/
-                let y = (data[i].y - you.y + ((canvas.height/2)/**zoom*/));/*/zoom;*/
-                ctx.fillText(data[i].name,x,(y-data[i].size/2)-15);
-                ctx.fillRect(x-(data[i].size/2),y-(data[i].size/2),data[i].size/*/zoom*/,data[i].size/*/zoom*/);
+                //}
+            });
+            /*for(var i = 0;i < data[0].length;i++) {
                 
-            }
+            }*/
+           // }
+            ctx.fillStyle = `rgb(${you.color.x},${you.color.y},${you.color.z})`;
+            ctx.font = "30px Comic Sans MS";
+
+            ctx.fillText(`Position: ${Math.ceil(you.x/10)} , ${Math.ceil(you.y/10)}`,140,300);
+            ctx.fillText(`Size: ${you.size/5}`,140,345);
+
             ctx.fillRect(20,20,235,235);
             ctx.clearRect(25,25,225,225);
-            ctx.fillText("Position: " + Math.ceil(you.x/10) + "," + Math.ceil(you.y/10),140,300);
-            for(let i = 0;i<data.length;i++) {
-                ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
-                //bro a minimap is the hardest thing to make if you don't understand what is even happening
-                let x = (data[i].x - you.x + (225/10));
-                x-=(data[i].size/2);
-                let y = (data[i].y - you.y + (225/10));
-                y-=(data[i].size/2);
-                x+= 225*4.5;
-                y+= 225*4.5;
 
-                let number = 8;
-                let totalx = (x/number)+(data[i].size/number);
-                let totaly = (y/number)+(data[i].size/number);
-                if(totalx < 25) {
-                    //ctx.fillRect(x/4,y/4,data[i].size/4,25-((y/4)+(data[i].size/4)));
-                }else if(totalx > 275) {
-                    //ctx.fillRect(x/4,y/4,data[i].size/4,data[i].size/4);
-                }else if(totaly > 275) {
+            let update;
 
-                }else if(totaly < 25) {
+            data.forEach(player => {
+                if(player.name) {
+                    ctx.font="30px Chilanka";
+                    if(players[player.name].size != player.size) {
+                        update = true;
+                        players[player.name].size = player.size;
+                    }
+                    //if(you.name == player.name) {
+                    //    ctx.fillStyle = rgbToHex(you.color.x,you.color.y,you.color.z);
+                    //}else {
+                        ctx.fillStyle = rgbToHex(players[player.name].color.x,players[player.name].color.y,players[player.name].color.z);
+                    //}
+                    //print(data[i].size);
+                    let x = (player.x - you.x + ((canvas.width/2)/**zoom*/));/*/zoom;*/
+                    let y = (player.y - you.y + ((canvas.height/2)/**zoom*/));/*/zoom;*/
+                    ctx.fillText(player.name,x,(y-player.size/2)-15);
+                    ctx.fillRect(x-(player.size/2),y-(player.size/2),player.size/*/zoom*/,player.size/*/zoom*/);
 
-                }else {
-                    ctx.font="10px Comic Sans MS";
-                    //ctx.textAlign = "center";
-                    ctx.fillText(data[i].name,(x+(data[i].size/2))/number,(y/number)-7);
-                    ctx.fillRect(x/number,y/number,data[i].size/number,data[i].size/number);
+                    //bro a minimap is the hardest thing to make if you don't understand what is even happening
+                    x = (player.x - you.x + (225/10));
+                    x-=(player.size/2);
+
+                    y = (player.y - you.y + (225/10));
+                    y-=(player.size/2);
+
+                    x+= 225*4.5;
+                    y+= 225*4.5;
+
+                    let number = 8;
+                    let totalx = (x/number)+(player.size/number);
+                    let totaly = (y/number)+(player.size/number);
+                    if(totalx < 25) {
+                        //ctx.fillRect(x/4,y/4,player.size/4,25-((y/4)+(player.size/4)));
+                    }else if(totalx > 275) {
+                        //ctx.fillRect(x/4,y/4,player.size/4,player.size/4);
+                    }else if(totaly > 275) {
+
+                    }else if(totaly < 25) {
+
+                    }else {
+                        ctx.font="10px Comic Sans MS";
+                        //ctx.textAlign = "center";
+                        ctx.fillText(player.name,(x+(player.size/2))/number,(y/number)-7);
+                        ctx.fillRect(x/number,y/number,player.size/number,player.size/number);
+                    }
                 }
+            });
+            if(update) {
+                updateLeaderboard();
+            }
+            /*for(let i = 1;i<data.length;i++) {
+                
+            }*/
+            
+            /*for(let i = 1;i<data.length;i++) { moving le minimap
+                ctx.fillStyle = rgbToHex(data[i].color.x,data[i].color.y,data[i].color.z);
+                
                 //print(data[i].size);
-                //let x = (data[i].x - you.x + ((235)/**zoom*/));/*/zoom;*/
+                //let x = (data[i].x - you.x + ((235)/**zoom*///));/*/zoom;*/
                 //let y = (data[i].y - you.y + ((235)/**zoom*/));/*/zoom;*/
                 //if(data[i].x == you.x && data[i].y == you.y) {
                 //    x = (235-data[i].size/4)+320;
@@ -323,7 +452,7 @@
                 //ctx.fillText(data[i].name,(x-data[i].name.length*5)-data[i].size/5,(y-data[i].size/2)-15);
                 //ctx.fillRect(x/4,y/4,data[i].size/4/*/zoom*/,data[i].size/4/*/zoom*/);
                 
-            }
+            //}
             //ctx.fillRect(data.x-10,data.y-10,20,20);
             //ctx.fillText('N',data.x,data.y);
         });
@@ -349,18 +478,24 @@
                 }
             }
             if(get('chat').style.display == "none" && get('menuOverlay').style.display == "none") {
-                socket.emit('keyPress',{
-                    key:event.key,
-                    state:true
-                });
+                //console.log(event.key.toLowerCase());
+                //if(event.key) {
+                    socket.emit('keyPress',{
+                        key:event.key.toLowerCase(),
+                        state:true,
+                    });
+                //}
             }
         };
         document.onkeyup = function(event) {
             socket.emit('keyPress',{
-                key:event.key,
-                state:false
+                key:event.key.toLowerCase(),
+                state:false,
             });
         }
+        socket.on("disconnect",()=>{
+            document.location.reload();
+        })
     </script>
     
 </body>

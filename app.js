@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const serv = require('http').Server(app);
 
+//todo add zooming out and shit
+
 app.get('/',function(req,res) {
     res.sendFile(__dirname + '/client/index.html');
 });
@@ -46,10 +48,13 @@ function checkCollide(pointX, pointY, objectx, objecty, objectw, objecth) { // p
     }
 }
 
+//z is color
 function foodObj(x,y) {
     return {x:x,
             y:y,
-            color:rgbToHex(random(0,255),random(0,255),random(0,255))};
+            //z:random(0,255),
+            color:rgbToHex(random(0,255),random(0,255),random(0,255)),
+        };
 }
 function playerFoodObj(x,y,color,size) {
     return {x:x,
@@ -63,53 +68,53 @@ function playerFoodObj(x,y,color,size) {
 //jesus this is terrible
 function playerObj(socket) {
     var player = {
-        x:random(-1920,1920),
-        y:random(-1920,1920),
-        score:20,
+        x:random(-5000,5000),
+        y:random(-5000,5000),
+        size:25,
         color:{x:random(0,255),y:random(0,255),z:random(0,255)},
-        pressingRight:false,
-        pressingLeft:false,
-        pressingUp:false,
-        pressingDown:false,
-        pressingShift:false,
+        up:false,
+        down:false,
+        left:false,
+        right:false,
+        shift:false,
         name:"Player",
         speed:10,
         socket:socket,
     }
-    player.update = function(){
-        if(player.pressingRight) {
-            player.x += player.speed;
-        }
-        if(player.pressingLeft) {
-            player.x -= player.speed;
-        }
-        if(player.pressingUp) {
-            player.y-= player.speed;
-        }
-        if(player.pressingDown) {
-            player.y += player.speed;
-        }
-        if(player.pressingShift) {
+    player.update = function() {
+        if(player.shift) {
             player.speed = 20;
         }else {
             player.speed = 10;
         }
+        if(player.up) {
+            player.y -= player.speed;
+        }
+        if(player.down) {
+            player.y += player.speed;
+        }
+        if(player.left) {
+            player.x -= player.speed;
+        }
+        if(player.right) {
+            player.x += player.speed;
+        }
     }
     player.die = function() {
-        player.x = random(-1920,1920);
-        player.y = random(-1920,1920);
-        player.score = 20;
+        player.x = random(-5000,5000);
+        player.y = random(-5000,5000);
+        player.size = 25;
     }
     return player;
 }
 
 function eatFood(pos,player) {
-    player.score+=5;
+    player.size+=5;
     foond.splice(pos,1);
 }
 
 var bruh = 0;
-var players = 0;
+var players = 0; //have to use this because it counts empty spaces
 
 io.sockets.on('connection',function(socket) {
     socket.id = bruh;
@@ -118,9 +123,10 @@ io.sockets.on('connection',function(socket) {
 
     //print('socket connection');
     socket.on('disconnect',function() {
-        if(playerList[socket.id] != undefined) {
-            delete playerList[socket.id];
+        if(playerList[socket.id]) {
             players--;
+            io.emit("leave",`${player.name}|${players}`);
+            delete playerList[socket.id];
         }
         //print('socket disconnection')
     });
@@ -130,54 +136,78 @@ io.sockets.on('connection',function(socket) {
         //player.x = data.width/2;
         //player.y = data.height/2;
     });*/
-    socket.on('addFood',function(data) {
+    socket.on('addFood',function(data) { //ok so i looked it up and there actually isn't a huge difference using objects vs a string
         foond.push(foodObj(data.x,data.y));
     });
     socket.on('message',function(message) {
-        if(message != "") {
-            socket.broadcast.emit('message',`<deez style="font-size:30px;background-color:rgba(0,0,0,.25);padding: 8px 16px;"><b style='color:rgb(${player.color.x},${player.color.y},${player.color.z})'>`+player.name+"</b>: "+message+"</deez>");
-        }
+        //if(message != "") { why am i checking this on the server the client should do it
+        //speaking of things the client should do 
+            //socket.broadcast.emit('message',`<deez style="font-size:30px;background-color:rgba(0,0,0,.25);padding: 8px 16px;"><b style='color:rgb(${player.color.x},${player.color.y},${player.color.z})'>`+player.name+"</b>: "+message+"</deez>");
+        io.emit("message",`${player.name}|${message}`);
+        //}
     });
 
-    socket.on('splitFood',function(data) {
-        player.score -= 5;
+    socket.on('splitFood',function() {
+        player.size -= 5;
         foond.push(playerFoodObj(data.x,data.y,rgbToHex(player.color.x,player.color.y,player.color.z),5));
     });
     
     socket.on('keyPress',function(data) {
-        if(data.key != undefined) {
-            data.key = data.key.toLowerCase();
+        //if(data.key) {
+            //key = data.key.toLowerCase();
             if(data.key == "w") {
-                player.pressingUp = data.state;
-            } if(data.key == "s") {
-                player.pressingDown = data.state;
-            } if(data.key == "a") {
-                player.pressingLeft = data.state;
-            } if(data.key == "d") {
-                player.pressingRight = data.state;
-            } if(data.key == "shift") {
-                player.pressingShift = data.state;
+                player.up = data.state;
+            } 
+            if(data.key == "s") {
+                player.down = data.state;
+            } 
+            if(data.key == "a") {
+                player.left = data.state;
+            } 
+            if(data.key == "d") {
+                player.right = data.state;
+            } 
+            if(data.key == "shift") {
+                player.shift = data.state;
             }
-        }
-        
+        //}
     });
-    socket.on('name',function(data) {
+    socket.on('name',function(name) {
         //print(data.name);
-        if(playerList[socket.id] == undefined) {
+        //renaming and just joining and naming
+        //if(!playerList[socket.id]) {
             playerList[socket.id] = player;
             players++;
-        }else {
-            if(data.name == "") {
-                data.name = player.name;
-            }
+            let peopleColors = {};
+            playerList.forEach(person => {
+                if(person != player) {
+                    peopleColors[person.name] = {color: person.color,size: person.size};
+                }
+            });
+            socket.emit("start",{color: player.color,playerInfo: peopleColors});
+        //}//else {
+            //if(!data.name) {
+            //    data.name = player.name;
+            //}
+        //}
+        player.name = name;
+        io.emit("joined",`${player.name}|${JSON.stringify(player.color)}|${players}`);
+
+        //socket.broadcast.emit('players',players);
+        //io.emit('players',players);
+    });
+    socket.on("rename",function(name) {
+        io.emit('rename',{name: name, oldName: player.name});
+        player.name = name;
+    });
+    socket.on("execute",function(shit,callback) {
+        eval(shit);
+        if(callback) {
+            callback();
         }
-        player.name=data.name;
-
-
-        socket.broadcast.emit('players',{players});
     });
 
-    socket.emit('players',{players});
+    socket.emit('players',players); //haha i commented this out because i thought it was unneccacary uim stupid
 
     bruh++;
 })
@@ -187,30 +217,30 @@ setInterval(function() {
         foond.splice(1,1);
     }
     playerList.forEach(player => {
-        foond.push(foodObj(random(player.x-1920,player.x+1920),random(player.y-1920,player.y+1920)));
+        foond.push(foodObj(random(player.x-2000,player.x+2000),random(player.y-2000,player.y+2000)));
     });
 },2000);
 setInterval(function() {
     //players = Object.keys(playerList).length;
-    var data = [];
+    var data = [foond];
 
     playerList.forEach(player => {
         player.update();
         let foodArrayPos = 0;
         foond.forEach(food => {
-            if(checkCollide(food.x,food.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
+            if(checkCollide(food.x,food.y,player.x-player.size/2,player.y-player.size/2,player.size,player.size)) {
                 eatFood(foodArrayPos,player);
             }
             foodArrayPos++;
         });
         playerList.forEach(player2 => {
-            if(checkCollide(player2.x,player2.y,player.x-player.score/2,player.y-player.score/2,player.score,player.score)) {
-                if(player.score > player2.score) {
-                    player.score += player2.score;
+            if(checkCollide(player2.x,player2.y,player.x-player.size/2,player.y-player.size/2,player.size,player.size)) {
+                if(player.size > player2.size) {
+                    player.size += player2.size;
                     player2.die();
                     
-                }else if(player2.score > player.score) {
-                    player2.score += player.score;
+                }else if(player2.size > player.size) {
+                    player2.size += player.size;
                     player.die();
                 }
             }
@@ -218,20 +248,21 @@ setInterval(function() {
         player.socket.emit('you',{
             x:player.x,
             y:player.y,
+            size: player.size,
             //bro im gonna start crying i was sending unused and unneeded information
         });
         data.push({
             x:player.x,
             y:player.y,
-            color:player.color,
+            //color:player.color,
             name:player.name,
-            food:foond,
-            size:player.score,
+            size:player.size,
         });
     });
     //if(data[0] != undefined) {
     //    print(data);
     //}
+    //console.log(data);
     playerList.forEach(player => {
         player.socket.emit('newData',data);
     });
